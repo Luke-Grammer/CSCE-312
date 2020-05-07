@@ -1,0 +1,92 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+// Author: Luke Grammer
+
+/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in 
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM==0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time step. If reset==1 then the 
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Put your code here:
+    
+    // Determine if A or C type instruction based on MSB
+    Or(a=false, b=instruction[15], out=CType); 
+    Not(in=CType, out=AType);
+
+    // If A type instruction, load instruction to A, otherwise, load ALU output if d1 is true
+    Mux16(a=ALUOut, b=instruction, sel=AType, out=toARegister); 
+    Or(a=AType, b=instruction[5], out=loadA);
+    ARegister(in=toARegister, load=loadA, out=AOut, out[0..14]=addressM);
+
+    // If C type instruction and d2 is true, load ALU output to D
+    And(a=CType, b=instruction[4], out=loadD);
+    DRegister(in=ALUOut, load=loadD, out=DOut);
+
+    // If a is true, send M to ALU, otherwise send A
+    Mux16(a=AOut, b=inM, sel=instruction[12], out=AOrM);
+
+    // Compute result of inputs and send to M, A, and D
+    ALU(x=DOut, y=AOrM, zx=instruction[11], nx=instruction[10], 
+    zy=instruction[9], ny=instruction[8], f=instruction[7], 
+    no=instruction[6], out=ALUOut, out=outM, zr=isZero, ng=isNeg);
+
+    // Save result to M if C type instruction and d3 is true
+    And(a=CType, b=instruction[3], out=writeM);
+
+    // Jump if C type instruction, ALU output is negative, and j1 is true
+    And(a=instruction[2], b=isNeg, out=Jump1IfC);
+    And(a=Jump1IfC, b=CType, out=Jump1);
+
+    // Jump if C type instruction, ALU output is zero, and j2 is true
+    And(a=instruction[1], b=isZero, out=Jump2IfC);
+    And(a=Jump2IfC, b=CType, out=Jump2);
+
+    // Jump if C type instruction, ALU output is positive, and j3 is true
+    Or(a=isNeg, b=isZero, out=ZeroOrNeg);
+    Not(in=ZeroOrNeg, out=positive);
+    And(a=instruction[0], b=positive, out=Jump3IfC);
+    And(a=Jump3IfC, b=CType, out=Jump3);
+
+    // If any jump is true, jump
+    Or(a=Jump1, b=Jump2, out=Jump1Or2);
+    Or(a=Jump1Or2, b=Jump3, out=Jump);
+
+    // If we do not jump, increment PC
+    Not(in=Jump, out=increment);
+
+    // Jump to A, reset, or increment PC, and send result back to PC
+    PC(in=AOut, load=Jump, inc=increment, reset=reset, out[0..14]=pc);
+}

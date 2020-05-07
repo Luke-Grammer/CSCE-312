@@ -1,0 +1,38 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/RightArithmeticBitshift.hdl
+// Author: Luke Grammer
+
+/**
+ * Please read instruction in project document
+ * 
+ */
+
+CHIP RightArithmeticBitshift {
+    IN in, load, reset;
+    OUT out[4];
+
+    PARTS:
+    // If load is high, push 'in', otherwise, push value of MSB
+    Mux(a=q3, b=in, sel=load, out=q3load);
+    // If reset is high, store false in bit
+    Mux(a=q3load, b=false, sel=reset, out=q3zr);
+    // Store value in q3 and return as output
+    Bit(in=q3zr, load=true, out=q3, out=out[3]);
+
+    // If reset is high, store false in bit
+    Mux(a=q3, b=false, sel=reset, out=q2zr);
+    // Store value in q2 and return as output
+    Bit(in=q2zr, load=true, out=q2, out=out[2]);
+
+    // If reset is high, store false in bit
+    Mux(a=q2, b=false, sel=reset, out=q1zr);
+    // Store value in q1 and return as output
+    Bit(in=q1zr, load=true, out=q1, out=out[1]);
+
+    // If reset is high, store false in bit
+    Mux(a=q1, b=false, sel=reset, out=q0zr);
+    // Store value in q0 and return as output
+    Bit(in=q0zr, load=true, out=q0, out=out[0]);
+}

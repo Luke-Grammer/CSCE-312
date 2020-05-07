@@ -1,0 +1,44 @@
+//Priority Encoder
+//input is 8-bit long array
+//output is 3-bit long array
+// Author: Luke Grammer
+
+CHIP PriorityEncoder83 {
+	IN a[8];
+	OUT out[3], idle;
+
+	PARTS:
+	// Determine value of idle pin
+	Or8Way(in=a, out=any);
+	Not(in=any, out=idle);
+
+	// Determine out values
+	Or(a=a[7], b=a[6], out=or76);
+	Or(a=or76, b=a[5], out=or765);
+	Or(a=or765, b=a[4], out=or7654);
+	Not(in=or7654, out=notout2);
+	// Greatest pin is true when a[7], a[6], a[5] or a[4] is true 
+
+	Or(a=a[3], b=a[2], out=or32);
+	And(a=notout2, b=or32, out=notout2andor32);
+	Or(a=or76, b=notout2andor32, out=or76ornotout2andor32);
+	Not(in=or76ornotout2andor32, out=notout1);
+	// Second pin is true when a[7] or a[6] is true, 
+	// or when greatest pin is false and a[3] or a[2] are true 
+
+	Not(in=a[6], out=not6);
+	And(a=not6, b=a[5], out=and5not6);
+	Or(a=a[7], b=and5not6, out=or7and5not6);
+	And(a=notout2, b=a[3], out=notout2and3);
+	And(a=notout2, b=notout1, out=notout2orout1);
+	And(a=notout2orout1, b=a[1], out=notout2orout1or1);
+	Or(a=or7and5not6, b=notout2and3, out=or7and5not6andnotout2and3);
+	Or(a=or7and5not6andnotout2and3, b=notout2orout1or1, out=out[0]);
+	// First pin is true when a[7] is true, or when a[5] is true but not a[6], 
+	// or when the greatest pin is false and a[3] is true, or when both the 
+	// greatest and middle pins are false but a[1] is true
+	
+	Not(in=notout1, out=out[1]);
+	Not(in=notout2, out=out[2]);
+
+}

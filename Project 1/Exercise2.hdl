@@ -1,0 +1,22 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux.hdl
+// Author: Luke Grammer
+
+/** You cannot get onto the ride if too young and too short, 
+ *  or too odd and have heart disease.
+ */
+
+CHIP Exercise2 {
+    IN tooYoung, tooShort, tooOld, haveHeartDisease;
+    OUT canGetOnRide; //can get onto the ride
+
+    PARTS:
+    // Can get on ride = Not((too young And too short) Or (too old And have heart disease))
+    And(a=tooYoung, b=tooShort, out=youngAndShort);
+    And(a=tooOld, b=haveHeartDisease, out=diseasedAndOld);
+    Or(a=youngAndShort, b=diseasedAndOld, out=qualifications);
+    Not(in=qualifications, out=canGetOnRide);
+    
+}

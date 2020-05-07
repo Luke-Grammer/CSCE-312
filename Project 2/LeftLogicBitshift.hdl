@@ -1,0 +1,48 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/LeftLogicBitshift.hdl
+// Author: Luke Grammer
+
+/**
+ * Shift x left y bits, new bits are filled in with 0, you may not use any DFF or clocked chip in this implementation
+ * You may assume the maximum shift is 8-bit
+ */
+
+CHIP LeftLogicBitshift {
+    IN x[16], y[16];
+    OUT out[16];
+
+    PARTS:
+
+    // Max shift of this implementation is 15-bit
+    // Start by multiplying x by 2
+    Add16(a=x, b=x, out=oneShift);
+
+    Mux16(a=x, b=oneShift, sel=y[0], out=MuxA);// if y[0] is true shift once
+
+    // Now multiply x by 2^2
+    Add16(a=MuxA, b=MuxA, out = oneShiftMuxA);
+    Add16(a=oneShiftMuxA, b=oneShiftMuxA, out = twoShiftsMuxA);
+
+    Mux16(a=MuxA, b=twoShiftsMuxA, sel=y[1], out=MuxB);// if y[1] is true shift result of MuxA twice
+
+    // Now multiply x by 2^3
+    Add16(a=MuxB, b=MuxB, out = oneShiftMuxB);
+    Add16(a=oneShiftMuxB, b=oneShiftMuxB, out = twoShiftsMuxB);
+    Add16(a=twoShiftsMuxB, b=twoShiftsMuxB, out = threeShiftsMuxB);
+
+    Mux16(a=MuxB, b=threeShiftsMuxB, sel=y[2], out=MuxC);// if y[3] is true shift result of MuxB four times
+
+    // Now multiply x by 2^4
+    Add16(a=MuxC, b=MuxC, out=oneShiftMuxC);
+    Add16(a=oneShiftMuxC, b=oneShiftMuxC, out=twoShiftsMuxC);
+    Add16(a=twoShiftsMuxC, b=twoShiftsMuxC, out=threeShiftsMuxC);
+    Add16(a=threeShiftsMuxC, b=threeShiftsMuxC, out=fourShiftsMuxC);
+    Add16(a=fourShiftsMuxC, b=fourShiftsMuxC, out = fiveShiftsMuxC);
+    Add16(a=fiveShiftsMuxC, b=fiveShiftsMuxC, out = sixShiftsMuxC);
+    Add16(a=sixShiftsMuxC, b=sixShiftsMuxC, out = sevenShiftsMuxC);
+    Add16(a=sevenShiftsMuxC, b=sevenShiftsMuxC, out = eightShiftsMuxC);
+
+    Mux16(a=MuxC, b=eightShiftsMuxC, sel=y[3], out=out); // if y[4] is true shift result of MuxC eight times
+}

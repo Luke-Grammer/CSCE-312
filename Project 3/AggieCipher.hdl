@@ -1,0 +1,35 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/AggieCipher.hdl
+// Author: Luke Grammer
+
+/**
+ * Implement a 4-bit dynamic shift cipher(we call it aggie cipher :)) that computes out=in+counter, where counter=<0,1,2,3,4,5,6,....,15,0,1,2,...>
+ * Please write the truth table of the circuit in another text file.
+ * You may use the 4-bit adder you implemented in project 2
+ */
+
+CHIP AggieCipher {
+    IN in[4];
+    OUT out[4];
+    
+	PARTS:
+    // Add in and counter
+    HalfAdder(a=in[0], b=counter0, sum=out[0], carry=carry1);
+    FullAdder(a=in[1], b=counter1, c=carry1, sum=out[1], carry=carry2);
+    FullAdder(a=in[2], b=counter2, c=carry2, sum=out[2], carry=carry3);
+    FullAdder(a=in[3], b=counter3, c=carry3, sum=out[3]);
+
+    // Increment counter
+    HalfAdder(a=counter0, b=true, sum=incCounter0, carry=carryInc1);
+    HalfAdder(a=counter1, b=carryInc1, sum=incCounter1, carry=carryInc2);
+    HalfAdder(a=counter2, b=carryInc2, sum=incCounter2, carry=carryInc3);
+    HalfAdder(a=counter3, b=carryInc3, sum=incCounter3);
+
+    // Store incremented counter
+	DFF(in=incCounter0, out=counter0);
+    DFF(in=incCounter1, out=counter1);
+    DFF(in=incCounter2, out=counter2);
+    DFF(in=incCounter3, out=counter3);	
+}
